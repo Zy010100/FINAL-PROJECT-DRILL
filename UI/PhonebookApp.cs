@@ -1,0 +1,272 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+public sealed class PhonebookApp
+{
+    private const int AllCountriesChoice = 6;
+
+    private readonly AseanPhonebook _phonebook;
+    private readonly ConsoleInput _input;
+
+    public PhonebookApp(AseanPhonebook phonebook, ConsoleInput input)
+    {
+        _phonebook = phonebook;
+        _input = input;
+    }
+
+    //main menu
+
+    public void Run()
+    {
+        while (true)
+        {
+            Console.WriteLine();
+            Console.WriteLine("[1] Store to ASEAN phonebook");
+            Console.WriteLine("[2] Edit entry in ASEAN phonebook");
+            Console.WriteLine("[3] Search ASEAN phonebook by country");
+            Console.WriteLine("[4] Exit");
+
+            string choice = _input.ReadLine("Enter choice: ");
+            switch (choice)
+            {
+                case "1":
+                    StoreEntries();
+                    break;
+                case "2":
+                    EditEntry();
+                    break;
+                case "3":
+                    SearchByCountry();
+                    break;
+                case "4":
+                    return;
+                default:
+                    Console.WriteLine("Invalid option. Please choose 1, 2, 3 or 4.");
+                    break;
+            }
+        }
+    }
+
+    //  store
+
+    private void StoreEntries()
+    {
+        bool another;
+        do
+        {
+            Console.WriteLine();
+            Student student = ReadNewStudent();
+            _phonebook.AddStudent(student);
+            Console.WriteLine($"Saved {student.FirstName} {student.Surname} ({student.StudentNumber}).");
+
+            another = _input.ReadYesNo("Do you want to enter another entry [Y/N]? ");
+        }
+        while (another);
+    }
+
+    private Student ReadNewStudent()
+    {
+        string studentNumber =
+            _input.ReadStudentNumber("Enter student number: ", n => _phonebook.IsStudentNumberTaken(n));
+        string surname = _input.ReadRequired("Enter surname: ");
+        string firstName = _input.ReadRequired("Enter first name: ");
+        string occupation = _input.ReadRequired("Enter occupation: ");
+        char gender = _input.ReadGender("Enter gender (M for male, F for female): ");
+        string countryCode = _input.ReadCountryCode("Enter country code: ");
+        string areaCode = _input.ReadDigits("Enter area code: ", "area code");
+        string number = _input.ReadDigits("Enter number: ", "phone number");
+
+        return new Student(
+            studentNumber, surname, firstName, occupation, gender,
+            countryCode, areaCode, number);
+    }
+
+    //  edit
+
+    private void EditEntry()
+    {
+        Console.WriteLine();
+        string studentNumber = _input.ReadRequired("Enter student number: ");
+        Student? student = _phonebook.FindStudent(studentNumber);
+        if (student is null)
+        {
+            Console.WriteLine($"Error: student number {studentNumber} does not exist.");
+            return;
+        }
+
+        bool editing = true;
+        while (editing)
+        {
+            Console.WriteLine();
+            Console.WriteLine($"Here is the existing information about {student.StudentNumber}:");
+            student.DisplayInformation();
+            Console.WriteLine();
+            Console.WriteLine("Which of the following information do you wish to change?");
+            Console.WriteLine("[1] Student number [2] Surname [3] Gender [4] Occupation");
+            Console.WriteLine("[5] Country code [6] Area code [7] Phone number");
+            Console.WriteLine("[8] None – Go back to main menu");
+
+            int choice = _input.ReadChoice("Enter choice: ", 1, 8);
+            switch (choice)
+            {
+                case 1:
+                    string newNumber = _input.ReadStudentNumber(
+                        "Enter new student number: ",
+                        n => _phonebook.IsStudentNumberTaken(n, student));
+                    student.StudentNumber = newNumber;
+                    break;
+                case 2:
+                    student.Surname = _input.ReadRequired("Enter new surname: ");
+                    break;
+                case 3:
+                    student.Gender = _input.ReadGender("Enter new gender (M for male, F for female): ");
+                    break;
+                case 4:
+                    student.Occupation = _input.ReadRequired("Enter new occupation: ");
+                    break;
+                case 5:
+                    student.CountryCode = _input.ReadCountryCode("Enter new country code: ");
+                    break;
+                case 6:
+                    student.AreaCode = _input.ReadDigits("Enter new area code: ", "area code");
+                    break;
+                case 7:
+                    student.PhoneNumber = _input.ReadDigits("Enter new phone number: ", "phone number");
+                    break;
+                case 8:
+                    editing = false;
+                    break;
+            }
+        }
+    }
+
+    //  search
+
+    
+// ==========================================
+// SEARCH ASEAN PHONEBOOK BY COUNTRY
+// ==========================================
+
+private void SearchByCountry()
+{
+    Console.WriteLine();
+    Console.WriteLine("=================================");
+    Console.WriteLine(" SEARCH ASEAN PHONEBOOK BY COUNTRY");
+    Console.WriteLine("=================================");
+    Console.WriteLine("From which country:");
+    Console.WriteLine("[1] Philippines [2] Thailand [3] Singapore [4] Indonesia");
+    Console.WriteLine("[5] Malaysia [6] ALL [0] No More");
+
+    List<AseanCountry> selected = ReadCountryChoices(out bool all);
+
+    if (all)
+    {
+        selected = new List<AseanCountry>(CountryCatalog.Countries);
+    }
+    else if (selected.Count == 0)
+    {
+        Console.WriteLine("\nNo country selected.");
+        return;
+    }
+
+    string heading = all
+        ? "Here are the students from all countries:"
+        : $"Here are the students from {JoinNames(selected)}:";
+
+    List<string> codes = selected
+        .Select(c => c.CountryCode)
+        .ToList();
+
+    List<Student> results = _phonebook.SearchByCountries(codes);
+
+    Console.WriteLine();
+    Console.WriteLine("=================================");
+    Console.WriteLine(heading);
+    Console.WriteLine("=================================");
+
+    if (results.Count == 0)
+    {
+        Console.WriteLine("No students found.");
+        return;
+    }
+
+    foreach (Student student in results)
+    {
+        student.DisplaySearchResult();
+        Console.WriteLine();
+    }
+
+    Console.WriteLine("---------------------------------");
+    Console.WriteLine($"Total students found: {results.Count}");
+}
+
+// ==========================================
+// SELECT COUNTRIES
+// ==========================================
+
+private List<AseanCountry> ReadCountryChoices(out bool all)
+{
+    List<AseanCountry> selected = new List<AseanCountry>();
+    all = false;
+
+    while (true)
+    {
+        int choice = _input.ReadChoice(
+            "Enter country choice: ", 0, AllCountriesChoice);
+
+        // 0 = Stop selecting countries
+        if (choice == 0)
+        {
+            break;
+        }
+
+        // 6 = Search ALL countries immediately
+        if (choice == AllCountriesChoice)
+        {
+            all = true;
+            return selected;
+        }
+
+        // Get selected country
+        AseanCountry country =
+            CountryCatalog.SearchOrder[choice - 1];
+
+        // Prevent duplicate selections
+        if (selected.Any(c => c.CountryCode == country.CountryCode))
+        {
+            Console.WriteLine(
+                $"{country.Name} is already selected.");
+            continue;
+        }
+
+        selected.Add(country);
+
+        Console.WriteLine(
+            $"{country.Name} successfully selected!");
+
+        // Ask whether user wants another country
+        bool another = _input.ReadYesNo(
+            "Do you want to select another country [Y/N]? ");
+
+        if (!another)
+        {
+            break;
+        }
+    }
+
+    return selected;
+}
+
+
+    private static string JoinNames(IReadOnlyList<AseanCountry> countries)
+    {
+        List<string> names = countries.Select(c => c.Name).ToList();
+        if (names.Count == 1)
+        {
+            return names[0];
+        }
+
+        return string.Join(", ", names.Take(names.Count - 1)) + " and " + names[^1];
+    }
+}
