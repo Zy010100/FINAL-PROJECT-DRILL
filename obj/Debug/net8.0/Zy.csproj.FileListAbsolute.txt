@@ -1,0 +1,16 @@
+C:\Users\Administrator\Desktop\Zy\obj\Debug\net8.0\Zy.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Administrator\Desktop\Zy\obj\Debug\net8.0\Zy.AssemblyInfoInputs.cache
+C:\Users\Administrator\Desktop\Zy\obj\Debug\net8.0\Zy.AssemblyInfo.cs
+C:\Users\Administrator\Desktop\Zy\obj\Debug\net8.0\Zy.csproj.CoreCompileInputs.cache
+C:\Users\Administrator\Desktop\Zy\bin\Debug\net8.0\Zy.exe
+C:\Users\Administrator\Desktop\Zy\bin\Debug\net8.0\Zy.deps.json
+C:\Users\Administrator\Desktop\Zy\bin\Debug\net8.0\Zy.runtimeconfig.json
+C:\Users\Administrator\Desktop\Zy\bin\Debug\net8.0\Zy.runtimeconfig.dev.json
+C:\Users\Administrator\Desktop\Zy\bin\Debug\net8.0\Zy.dll
+C:\Users\Administrator\Desktop\Zy\bin\Debug\net8.0\Zy.pdb
+C:\Users\Administrator\Desktop\Zy\obj\Debug\net8.0\Zy.dll
+C:\Users\Administrator\Desktop\Zy\obj\Debug\net8.0\refint\Zy.dll
+C:\Users\Administrator\Desktop\Zy\obj\Debug\net8.0\Zy.pdb
+C:\Users\Administrator\Desktop\Zy\obj\Debug\net8.0\Zy.genruntimeconfig.cache
+C:\Users\Administrator\Desktop\Zy\obj\Debug\net8.0\ref\Zy.dll
+C:\Users\Administrator\Desktop\Zy\obj\Debug\net8.0\Zy.csproj.Up2Date
