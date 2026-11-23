@@ -1,187 +1,7 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-// CLASS 1: ASEAN COUNTRY
-public class AseanCountry
-{
-    public string Name { get; set; }
-    public string CountryCode { get; set; }
-
-    public AseanCountry(string name, string countryCode)
-    {
-        Name = name;
-        CountryCode = countryCode;
-    }
-}
-
-// CLASS 2: COUNTRY CATALOG
-public static class CountryCatalog
-{
-    public static readonly List<AseanCountry> Countries =
-        new List<AseanCountry>
-        {
-            new AseanCountry("Malaysia", "60"),
-            new AseanCountry("Indonesia", "62"),
-            new AseanCountry("Philippines", "63"),
-            new AseanCountry("Singapore", "65"),
-            new AseanCountry("Thailand", "66")
-        };
-
-    // Order used in the country search menu
-    public static readonly List<AseanCountry> SearchOrder =
-        new List<AseanCountry>
-        {
-            Countries[2], // Philippines
-            Countries[4], // Thailand
-            Countries[3], // Singapore
-            Countries[1], // Indonesia
-            Countries[0]  // Malaysia
-        };
-
-    public static AseanCountry FindByCode(string code)
-    {
-        return Countries.FirstOrDefault(
-            country => country.CountryCode == code);
-    }
-}
-
-// CLASS 3: STUDENT
-public class Student
-{
-    public string StudentNumber { get; set; }
-    public string Surname { get; set; }
-    public string FirstName { get; set; }
-    public string Occupation { get; set; }
-    public char Gender { get; set; }
-    public string CountryCode { get; set; }
-    public string AreaCode { get; set; }
-    public string PhoneNumber { get; set; }
-
-    public Student(
-        string studentNumber,
-        string surname,
-        string firstName,
-        string occupation,
-        char gender,
-        string countryCode,
-        string areaCode,
-        string phoneNumber)
-    {
-        StudentNumber = studentNumber;
-        Surname = surname;
-        FirstName = firstName;
-        Occupation = occupation;
-        Gender = gender;
-        CountryCode = countryCode;
-        AreaCode = areaCode;
-        PhoneNumber = phoneNumber;
-    }
-
-    public string GetFullPhoneNumber()
-    {
-        return CountryCode + "-" + AreaCode + "-" + PhoneNumber;
-    }
-
-    public string GetGender()
-    {
-        return Gender == 'M' ? "Male" : "Female";
-    }
-
-    public void DisplayInformation()
-    {
-        Console.WriteLine(
-            FirstName + " " + Surname +
-            " is a " + Occupation + ".");
-
-        Console.WriteLine("Student Number: " + StudentNumber);
-        Console.WriteLine("Gender: " + GetGender());
-
-        AseanCountry country = CountryCatalog.FindByCode(CountryCode);
-
-        Console.WriteLine(
-            "Country: " + (country != null ? country.Name : "Unknown"));
-
-        Console.WriteLine(
-            "Phone Number: " + GetFullPhoneNumber());
-    }
-
-    public void DisplaySearchResult()
-    {
-        AseanCountry country = CountryCatalog.FindByCode(CountryCode);
-
-        Console.WriteLine(
-            Surname + ", " + FirstName +
-            ", with student number " + StudentNumber +
-            ". Occupation: " + Occupation +
-            ". Gender: " + GetGender() +
-            ". Phone number: " + GetFullPhoneNumber() +
-            " (" + (country != null ? country.Name : "Unknown") + ").");
-    }
-}
-
-// CLASS 4: ASEAN PHONEBOOK
-public class AseanPhonebook
-{
-    private List<Student> students = new List<Student>();
-
-    // Add a student
-    public bool AddStudent(Student student)
-    {
-        if (FindStudent(student.StudentNumber) != null)
-        {
-            return false;
-        }
-
-        students.Add(student);
-        return true;
-    }
-
-    // Find student using student number
-    public Student FindStudent(string studentNumber)
-    {
-        return students.FirstOrDefault(
-            student => string.Equals(
-                student.StudentNumber,
-                studentNumber,
-                StringComparison.OrdinalIgnoreCase));
-    }
-
-    // Check whether a student number is already used
-    public bool IsStudentNumberTaken(
-        string studentNumber,
-        Student excludedStudent = null)
-    {
-        return students.Any(student =>
-            !ReferenceEquals(student, excludedStudent) &&
-            string.Equals(
-                student.StudentNumber,
-                studentNumber,
-                StringComparison.OrdinalIgnoreCase));
-    }
-
-    // Search students by selected countries
-    public List<Student> SearchByCountries(List<string> countryCodes)
-    {
-        HashSet<string> selectedCodes =
-            new HashSet<string>(countryCodes);
-
-        return students
-            .Where(student => selectedCodes.Contains(student.CountryCode))
-            .OrderBy(student => student.Surname, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(student => student.FirstName, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-    }
-
-    // Get total number of entries
-    public int GetStudentCount()
-    {
-        return students.Count;
-    }
-}
-
-// MAIN PROGRAM
 public class Program
 {
     static AseanPhonebook phonebook = new AseanPhonebook();
@@ -418,125 +238,114 @@ public class Program
     }
 
     // SEARCH ASEAN PHONEBOOK BY COUNTRY
-    
-static void SearchPhonebook()
-{
-    Console.Clear();
-
-    Console.WriteLine("==================================");
-    Console.WriteLine(" SEARCH ASEAN PHONEBOOK BY COUNTRY");
-    Console.WriteLine("==================================");
-
-    Console.WriteLine("From which country:");
-    Console.WriteLine("[1] Philippines");
-    Console.WriteLine("[2] Thailand");
-    Console.WriteLine("[3] Singapore");
-    Console.WriteLine("[4] Indonesia");
-    Console.WriteLine("[5] Malaysia");
-    Console.WriteLine("[6] ALL");
-    Console.WriteLine("[0] No More");
-
-    List<AseanCountry> selectedCountries =
-        new List<AseanCountry>();
-
-    bool allCountries = false;
-
-    while (true)
+    static void SearchPhonebook()
     {
-        int choice = ReadInteger("\nEnter choice: ", 0, 6);
+        Console.Clear();
 
-        if (choice == 0)
+        Console.WriteLine("==================================");
+        Console.WriteLine(" SEARCH ASEAN PHONEBOOK BY COUNTRY");
+        Console.WriteLine("==================================");
+
+        Console.WriteLine("From which country:");
+        Console.WriteLine("[1] Philippines");
+        Console.WriteLine("[2] Thailand");
+        Console.WriteLine("[3] Singapore");
+        Console.WriteLine("[4] Indonesia");
+        Console.WriteLine("[5] Malaysia");
+        Console.WriteLine("[6] ALL");
+        Console.WriteLine("[0] No More");
+
+        List<AseanCountry> selectedCountries =
+            new List<AseanCountry>();
+
+        bool allCountries = false;
+        int selectionNumber = 1;
+
+        while (true)
         {
-            break;
+            int choice = ReadInteger(
+                "Enter choice " + selectionNumber + ": ", 0, 6);
+
+            if (choice == 0)
+            {
+                break;
+            }
+
+            if (choice == 6)
+            {
+                allCountries = true;
+                selectedCountries = new List<AseanCountry>(
+                    CountryCatalog.Countries);
+                break;
+            }
+
+            AseanCountry selected =
+                CountryCatalog.SearchOrder[choice - 1];
+
+            // Prevent duplicate country selections
+            bool alreadySelected = selectedCountries.Any(
+                country => country.CountryCode == selected.CountryCode);
+
+            if (alreadySelected)
+            {
+                Console.WriteLine(
+                    "This country has already been selected.");
+            }
+            else
+            {
+                selectedCountries.Add(selected);
+            }
+
+            selectionNumber++;
         }
 
-        if (choice == 6)
+        if (selectedCountries.Count == 0)
         {
-            allCountries = true;
-            selectedCountries = new List<AseanCountry>(
-                CountryCatalog.Countries);
-            break;
+            Console.WriteLine("\nNo countries selected.");
+            return;
         }
 
-        AseanCountry selected =
-            CountryCatalog.SearchOrder[choice - 1];
+        Console.WriteLine("\n==================================");
 
-        bool alreadySelected = selectedCountries.Any(
-            country => country.CountryCode == selected.CountryCode);
-
-        if (alreadySelected)
+        if (allCountries)
         {
+            Console.WriteLine("Here are all students from all countries:");
+        }
+        else
+        {
+            string countryNames = FormatCountryNames(selectedCountries);
+
             Console.WriteLine(
-                "This country has already been selected.");
-            continue;
+                "Here are the students from " + countryNames + ":");
         }
 
-        selectedCountries.Add(selected);
+        Console.WriteLine("==================================");
 
-        Console.WriteLine(
-            "\n" + selected.Name + " successfully selected!");
+        List<string> countryCodes = selectedCountries
+            .Select(country => country.CountryCode)
+            .ToList();
 
-        // Ask whether the user wants another country
-        bool addAnother = ReadYesNo(
-            "Do you want to select another country [Y/N]? ");
+        List<Student> results =
+            phonebook.SearchByCountries(countryCodes);
 
-        if (!addAnother)
+        if (results.Count == 0)
         {
-            break;
+            Console.WriteLine("\nNo student records found for the selected countries.");
         }
-    }
-
-    if (selectedCountries.Count == 0)
-    {
-        Console.WriteLine("\nNo countries selected.");
-        return;
-    }
-
-    Console.WriteLine("\n==================================");
-
-    if (allCountries)
-    {
-        Console.WriteLine(
-            "Here are all students from all countries:");
-    }
-    else
-    {
-        string countryNames =
-            FormatCountryNames(selectedCountries);
-
-        Console.WriteLine(
-            "Here are the students from " + countryNames + ":");
-    }
-
-    Console.WriteLine("==================================");
-
-    List<string> countryCodes = selectedCountries
-        .Select(country => country.CountryCode)
-        .ToList();
-
-    List<Student> results =
-        phonebook.SearchByCountries(countryCodes);
-
-    if (results.Count == 0)
-    {
-        Console.WriteLine(
-            "\nNo student records found for the selected countries.");
-    }
-    else
-    {
-        Console.WriteLine();
-
-        foreach (Student student in results)
+        else
         {
-            student.DisplaySearchResult();
             Console.WriteLine();
+
+            foreach (Student student in results)
+            {
+                student.DisplaySearchResult();
+                Console.WriteLine();
+            }
+
+            Console.WriteLine("----------------------------------");
+            Console.WriteLine("Total students found: " + results.Count);
         }
-
-        Console.WriteLine("----------------------------------");
-        Console.WriteLine("Total students found: " + results.Count);
     }
-}
-
 
     // FORMAT SELECTED COUNTRY NAMES
     static string FormatCountryNames(
