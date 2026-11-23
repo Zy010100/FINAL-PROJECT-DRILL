@@ -418,114 +418,125 @@ public class Program
     }
 
     // SEARCH ASEAN PHONEBOOK BY COUNTRY
-    static void SearchPhonebook()
+    
+static void SearchPhonebook()
+{
+    Console.Clear();
+
+    Console.WriteLine("==================================");
+    Console.WriteLine(" SEARCH ASEAN PHONEBOOK BY COUNTRY");
+    Console.WriteLine("==================================");
+
+    Console.WriteLine("From which country:");
+    Console.WriteLine("[1] Philippines");
+    Console.WriteLine("[2] Thailand");
+    Console.WriteLine("[3] Singapore");
+    Console.WriteLine("[4] Indonesia");
+    Console.WriteLine("[5] Malaysia");
+    Console.WriteLine("[6] ALL");
+    Console.WriteLine("[0] No More");
+
+    List<AseanCountry> selectedCountries =
+        new List<AseanCountry>();
+
+    bool allCountries = false;
+
+    while (true)
     {
-        Console.Clear();
+        int choice = ReadInteger("\nEnter choice: ", 0, 6);
 
-        Console.WriteLine("==================================");
-        Console.WriteLine(" SEARCH ASEAN PHONEBOOK BY COUNTRY");
-        Console.WriteLine("==================================");
-
-        Console.WriteLine("From which country:");
-        Console.WriteLine("[1] Philippines");
-        Console.WriteLine("[2] Thailand");
-        Console.WriteLine("[3] Singapore");
-        Console.WriteLine("[4] Indonesia");
-        Console.WriteLine("[5] Malaysia");
-        Console.WriteLine("[6] ALL");
-        Console.WriteLine("[0] No More");
-
-        List<AseanCountry> selectedCountries =
-            new List<AseanCountry>();
-
-        bool allCountries = false;
-        int selectionNumber = 1;
-
-        while (true)
+        if (choice == 0)
         {
-            int choice = ReadInteger(
-                "Enter choice " + selectionNumber + ": ", 0, 6);
-
-            if (choice == 0)
-            {
-                break;
-            }
-
-            if (choice == 6)
-            {
-                allCountries = true;
-                selectedCountries = new List<AseanCountry>(
-                    CountryCatalog.Countries);
-                break;
-            }
-
-            AseanCountry selected =
-                CountryCatalog.SearchOrder[choice - 1];
-
-            // Prevent duplicate country selections
-            bool alreadySelected = selectedCountries.Any(
-                country => country.CountryCode == selected.CountryCode);
-
-            if (alreadySelected)
-            {
-                Console.WriteLine(
-                    "This country has already been selected.");
-            }
-            else
-            {
-                selectedCountries.Add(selected);
-            }
-
-            selectionNumber++;
+            break;
         }
 
-        if (selectedCountries.Count == 0)
+        if (choice == 6)
         {
-            Console.WriteLine("\nNo countries selected.");
-            return;
+            allCountries = true;
+            selectedCountries = new List<AseanCountry>(
+                CountryCatalog.Countries);
+            break;
         }
 
-        Console.WriteLine("\n==================================");
+        AseanCountry selected =
+            CountryCatalog.SearchOrder[choice - 1];
 
-        if (allCountries)
-        {
-            Console.WriteLine("Here are all students from all countries:");
-        }
-        else
-        {
-            string countryNames = FormatCountryNames(selectedCountries);
+        bool alreadySelected = selectedCountries.Any(
+            country => country.CountryCode == selected.CountryCode);
 
+        if (alreadySelected)
+        {
             Console.WriteLine(
-                "Here are the students from " + countryNames + ":");
+                "This country has already been selected.");
+            continue;
         }
 
-        Console.WriteLine("==================================");
+        selectedCountries.Add(selected);
 
-        List<string> countryCodes = selectedCountries
-            .Select(country => country.CountryCode)
-            .ToList();
+        Console.WriteLine(
+            "\n" + selected.Name + " successfully selected!");
 
-        List<Student> results =
-            phonebook.SearchByCountries(countryCodes);
+        // Ask whether the user wants another country
+        bool addAnother = ReadYesNo(
+            "Do you want to select another country [Y/N]? ");
 
-        if (results.Count == 0)
+        if (!addAnother)
         {
-            Console.WriteLine("\nNo student records found for the selected countries.");
-        }
-        else
-        {
-            Console.WriteLine();
-
-            foreach (Student student in results)
-            {
-                student.DisplaySearchResult();
-                Console.WriteLine();
-            }
-
-            Console.WriteLine("----------------------------------");
-            Console.WriteLine("Total students found: " + results.Count);
+            break;
         }
     }
+
+    if (selectedCountries.Count == 0)
+    {
+        Console.WriteLine("\nNo countries selected.");
+        return;
+    }
+
+    Console.WriteLine("\n==================================");
+
+    if (allCountries)
+    {
+        Console.WriteLine(
+            "Here are all students from all countries:");
+    }
+    else
+    {
+        string countryNames =
+            FormatCountryNames(selectedCountries);
+
+        Console.WriteLine(
+            "Here are the students from " + countryNames + ":");
+    }
+
+    Console.WriteLine("==================================");
+
+    List<string> countryCodes = selectedCountries
+        .Select(country => country.CountryCode)
+        .ToList();
+
+    List<Student> results =
+        phonebook.SearchByCountries(countryCodes);
+
+    if (results.Count == 0)
+    {
+        Console.WriteLine(
+            "\nNo student records found for the selected countries.");
+    }
+    else
+    {
+        Console.WriteLine();
+
+        foreach (Student student in results)
+        {
+            student.DisplaySearchResult();
+            Console.WriteLine();
+        }
+
+        Console.WriteLine("----------------------------------");
+        Console.WriteLine("Total students found: " + results.Count);
+    }
+}
+
 
     // FORMAT SELECTED COUNTRY NAMES
     static string FormatCountryNames(
