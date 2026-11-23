@@ -1,15 +1,13 @@
 using System;
 
-public class Student
+namespace AseanPhonebook.Models;
+
+public sealed class Student
 {
-    public string StudentNumber { get; set; }
-    public string Surname { get; set; }
-    public string FirstName { get; set; }
-    public string Occupation { get; set; }
-    public Gender Gender { get; set; }
-    public string CountryCode { get; set; }
-    public string AreaCode { get; set; }
-    public string PhoneNumber { get; set; }
+    private string _studentNumber;
+    private string _surname;
+    private string _firstName;
+    private string _occupation;
 
     public Student(
         string studentNumber,
@@ -17,53 +15,62 @@ public class Student
         string firstName,
         string occupation,
         Gender gender,
-        string countryCode,
-        string areaCode,
-        string phoneNumber)
+        PhoneNumber phone)
     {
-        StudentNumber = studentNumber;
-        Surname = surname;
-        FirstName = firstName;
-        Occupation = occupation;
+        _studentNumber = RequireText(studentNumber, nameof(studentNumber));
+        _surname = RequireText(surname, nameof(surname));
+        _firstName = RequireText(firstName, nameof(firstName));
+        _occupation = RequireText(occupation, nameof(occupation));
         Gender = gender;
-        CountryCode = countryCode;
-        AreaCode = areaCode;
-        PhoneNumber = phoneNumber;
+        Phone = phone ?? throw new ArgumentNullException(nameof(phone));
     }
 
-    public string GetFullPhoneNumber()
+    public string StudentNumber
     {
-        return CountryCode + "-" + AreaCode + "-" + PhoneNumber;
+        get => _studentNumber;
+        set => _studentNumber = RequireText(value, nameof(value));
     }
 
-    public void DisplayInformation()
+    public string Surname
     {
-        Console.WriteLine(
-            FirstName + " " + Surname +
-            " is a " + Occupation + ".");
-
-        Console.WriteLine("Student Number: " + StudentNumber);
-        Console.WriteLine("Gender: " + Gender);
-
-        AseanCountry country = CountryCatalog.FindByCode(CountryCode);
-
-        Console.WriteLine(
-            "Country: " + (country != null ? country.Name : "Unknown"));
-
-        Console.WriteLine(
-            "Phone Number: " + GetFullPhoneNumber());
+        get => _surname;
+        set => _surname = RequireText(value, nameof(value));
     }
 
-    public void DisplaySearchResult()
+    public string FirstName
     {
-        AseanCountry country = CountryCatalog.FindByCode(CountryCode);
+        get => _firstName;
+        set => _firstName = RequireText(value, nameof(value));
+    }
 
-        Console.WriteLine(
-            Surname + ", " + FirstName +
-            ", with student number " + StudentNumber +
-            ". Occupation: " + Occupation +
-            ". Gender: " + Gender +
-            ". Phone number: " + GetFullPhoneNumber() +
-            " (" + (country != null ? country.Name : "Unknown") + ").");
+    public string Occupation
+    {
+        get => _occupation;
+        set => _occupation = RequireText(value, nameof(value));
+    }
+
+    public Gender Gender { get; set; }
+
+    public PhoneNumber Phone { get; }
+
+    private string Possessive => Gender == Gender.Male ? "His" : "Her";
+
+    public string ToEditSummary() =>
+        $"{FirstName} {Surname} is a {Occupation}. {Possessive} number is {Phone}";
+
+    public string ToSearchLine() =>
+        $"{Surname}, {FirstName}, with student number {StudentNumber}, is a {Occupation}. " +
+        $"{Possessive} phone number is {Phone}";
+
+    public override string ToString() => ToSearchLine();
+
+    private static string RequireText(string? text, string paramName)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            throw new ArgumentException("Value must not be blank.", paramName);
+        }
+
+        return text.Trim();
     }
 }

@@ -1,5 +1,8 @@
 using System;
 using System.Linq;
+using AseanPhonebook.Models;
+
+namespace AseanPhonebook.UI;
 
 public sealed class ConsoleInput
 {
@@ -43,38 +46,38 @@ public sealed class ConsoleInput
         }
     }
 
-    public char ReadGender(string prompt)
+    public Gender ReadGender(string prompt)
     {
         while (true)
         {
             string text = ReadLine(prompt);
             if (text.Equals("M", StringComparison.OrdinalIgnoreCase))
             {
-                return 'M';
+                return Gender.Male;
             }
 
             if (text.Equals("F", StringComparison.OrdinalIgnoreCase))
             {
-                return 'F';
+                return Gender.Female;
             }
 
             Console.WriteLine("Error: enter M for male or F for female.");
         }
     }
 
-    public string ReadCountryCode(string prompt)
+    public AseanCountry ReadCountry(string prompt)
     {
         while (true)
         {
             string text = ReadLine(prompt);
-            if (CountryCatalog.FindByCode(text) != null)
+            if (AseanCountry.TryParseCode(text, out AseanCountry country))
             {
-                return text;
+                return country;
             }
 
             Console.WriteLine(
                 "Error: unsupported country code. Valid codes: " +
-                string.Join(", ", CountryCatalog.Countries.Select(c => $"{c.CountryCode} ({c.Name})")) + ".");
+                string.Join(", ", AseanCountry.All.Select(c => $"{c.Code} ({c.Name})")) + ".");
         }
     }
 
@@ -83,18 +86,13 @@ public sealed class ConsoleInput
         while (true)
         {
             string text = ReadLine(prompt);
-            if (IsDigits(text))
+            if (PhoneNumber.IsDigits(text))
             {
                 return text;
             }
 
             Console.WriteLine($"Error: {fieldName} must contain digits only.");
         }
-    }
-
-    private static bool IsDigits(string text)
-    {
-        return text.Length > 0 && text.All(c => c >= '0' && c <= '9');
     }
 
     public bool ReadYesNo(string prompt)

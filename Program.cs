@@ -1,5 +1,9 @@
-using System;
+﻿using System;
 using System.Text;
+using AseanPhonebook.Services;
+using AseanPhonebook.UI;
+
+namespace AseanPhonebook;
 
 internal static class Program
 {
@@ -12,7 +16,7 @@ internal static class Program
         try
         {
             var app = new PhonebookApp(
-                new AseanPhonebook(),
+                new Phonebook(),
                 new ConsoleInput());
             app.Run();
         }

@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 
+namespace AseanPhonebook.Models;
+
 public sealed class AseanCountry
 {
     public string Name { get; }

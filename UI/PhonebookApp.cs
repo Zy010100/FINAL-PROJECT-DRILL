@@ -1,15 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AseanPhonebook.Models;
+using AseanPhonebook.Services;
+
+namespace AseanPhonebook.UI;
 
 public sealed class PhonebookApp
 {
     private const int AllCountriesChoice = 6;
 
-    private readonly AseanPhonebook _phonebook;
+    private readonly Phonebook _phonebook;
     private readonly ConsoleInput _input;
 
-    public PhonebookApp(AseanPhonebook phonebook, ConsoleInput input)
+    public PhonebookApp(Phonebook phonebook, ConsoleInput input)
     {
         _phonebook = phonebook;
         _input = input;
@@ -57,7 +61,7 @@ public sealed class PhonebookApp
         {
             Console.WriteLine();
             Student student = ReadNewStudent();
-            _phonebook.AddStudent(student);
+            _phonebook.Add(student);
             Console.WriteLine($"Saved {student.FirstName} {student.Surname} ({student.StudentNumber}).");
 
             another = _input.ReadYesNo("Do you want to enter another entry [Y/N]? ");
@@ -68,18 +72,18 @@ public sealed class PhonebookApp
     private Student ReadNewStudent()
     {
         string studentNumber =
-            _input.ReadStudentNumber("Enter student number: ", n => _phonebook.IsStudentNumberTaken(n));
+            _input.ReadStudentNumber("Enter student number: ", _phonebook.Contains);
         string surname = _input.ReadRequired("Enter surname: ");
         string firstName = _input.ReadRequired("Enter first name: ");
         string occupation = _input.ReadRequired("Enter occupation: ");
-        char gender = _input.ReadGender("Enter gender (M for male, F for female): ");
-        string countryCode = _input.ReadCountryCode("Enter country code: ");
+        Gender gender = _input.ReadGender("Enter gender (M for male, F for female): ");
+        AseanCountry country = _input.ReadCountry("Enter country code: ");
         string areaCode = _input.ReadDigits("Enter area code: ", "area code");
         string number = _input.ReadDigits("Enter number: ", "phone number");
 
         return new Student(
             studentNumber, surname, firstName, occupation, gender,
-            countryCode, areaCode, number);
+            new PhoneNumber(country, areaCode, number));
     }
 
     //  edit
@@ -88,7 +92,7 @@ public sealed class PhonebookApp
     {
         Console.WriteLine();
         string studentNumber = _input.ReadRequired("Enter student number: ");
-        Student? student = _phonebook.FindStudent(studentNumber);
+        Student? student = _phonebook.Find(studentNumber);
         if (student is null)
         {
             Console.WriteLine($"Error: student number {studentNumber} does not exist.");
@@ -100,7 +104,7 @@ public sealed class PhonebookApp
         {
             Console.WriteLine();
             Console.WriteLine($"Here is the existing information about {student.StudentNumber}:");
-            student.DisplayInformation();
+            Console.WriteLine(student.ToEditSummary());
             Console.WriteLine();
             Console.WriteLine("Which of the following information do you wish to change?");
             Console.WriteLine("[1] Student number [2] Surname [3] Gender [4] Occupation");
@@ -113,8 +117,8 @@ public sealed class PhonebookApp
                 case 1:
                     string newNumber = _input.ReadStudentNumber(
                         "Enter new student number: ",
-                        n => _phonebook.IsStudentNumberTaken(n, student));
-                    student.StudentNumber = newNumber;
+                        n => _phonebook.Find(n) is { } other && !ReferenceEquals(other, student));
+                    _phonebook.TryChangeStudentNumber(student, newNumber);
                     break;
                 case 2:
                     student.Surname = _input.ReadRequired("Enter new surname: ");
@@ -126,13 +130,13 @@ public sealed class PhonebookApp
                     student.Occupation = _input.ReadRequired("Enter new occupation: ");
                     break;
                 case 5:
-                    student.CountryCode = _input.ReadCountryCode("Enter new country code: ");
+                    student.Phone.Country = _input.ReadCountry("Enter new country code: ");
                     break;
                 case 6:
-                    student.AreaCode = _input.ReadDigits("Enter new area code: ", "area code");
+                    student.Phone.AreaCode = _input.ReadDigits("Enter new area code: ", "area code");
                     break;
                 case 7:
-                    student.PhoneNumber = _input.ReadDigits("Enter new phone number: ", "phone number");
+                    student.Phone.Number = _input.ReadDigits("Enter new phone number: ", "phone number");
                     break;
                 case 8:
                     editing = false;
@@ -143,121 +147,99 @@ public sealed class PhonebookApp
 
     //  search
 
-    
-// ==========================================
-// SEARCH ASEAN PHONEBOOK BY COUNTRY
-// ==========================================
-
-private void SearchByCountry()
-{
-    Console.WriteLine();
-    Console.WriteLine("=================================");
-    Console.WriteLine(" SEARCH ASEAN PHONEBOOK BY COUNTRY");
-    Console.WriteLine("=================================");
-    Console.WriteLine("From which country:");
-    Console.WriteLine("[1] Philippines [2] Thailand [3] Singapore [4] Indonesia");
-    Console.WriteLine("[5] Malaysia [6] ALL [0] No More");
-
-    List<AseanCountry> selected = ReadCountryChoices(out bool all);
-
-    if (all)
+    private void SearchByCountry()
     {
-        selected = new List<AseanCountry>(CountryCatalog.Countries);
-    }
-    else if (selected.Count == 0)
-    {
-        Console.WriteLine("\nNo country selected.");
-        return;
-    }
-
-    string heading = all
-        ? "Here are the students from all countries:"
-        : $"Here are the students from {JoinNames(selected)}:";
-
-    List<string> codes = selected
-        .Select(c => c.CountryCode)
-        .ToList();
-
-    List<Student> results = _phonebook.SearchByCountries(codes);
-
-    Console.WriteLine();
-    Console.WriteLine("=================================");
-    Console.WriteLine(heading);
-    Console.WriteLine("=================================");
-
-    if (results.Count == 0)
-    {
-        Console.WriteLine("No students found.");
-        return;
-    }
-
-    foreach (Student student in results)
-    {
-        student.DisplaySearchResult();
         Console.WriteLine();
+        Console.WriteLine("From which country:");
+        Console.WriteLine("[1] Philippines [2] Thailand [3] Singapore [4] Indonesia");
+        Console.WriteLine("[5] Malaysia [6] ALL [0] No More");
+
+        List<AseanCountry> selected = ReadCountryChoices(out bool all);
+
+        IReadOnlyList<Student> results;
+        string heading;
+        if (all)
+        {
+            results = _phonebook.GetAll();
+            heading = "Here are the students from all countries:";
+        }
+        else if (selected.Count == 0)
+        {
+            Console.WriteLine("No country selected.");
+            return;
+        }
+        else
+        {
+            results = _phonebook.SearchByCountries(selected);
+            heading = $"Here are the students from {JoinNames(selected)}:";
+        }
+
+        Console.WriteLine(heading);
+        if (results.Count == 0)
+        {
+            Console.WriteLine("No students found.");
+            return;
+        }
+
+        foreach (Student student in results)
+        {
+            Console.WriteLine(student.ToSearchLine());
+        }
     }
-
-    Console.WriteLine("---------------------------------");
-    Console.WriteLine($"Total students found: {results.Count}");
-}
-
-// ==========================================
-// SELECT COUNTRIES
-// ==========================================
-
-private List<AseanCountry> ReadCountryChoices(out bool all)
-{
-    List<AseanCountry> selected = new List<AseanCountry>();
-    all = false;
-
-    while (true)
+    private List<AseanCountry> ReadCountryChoices(out bool all)
     {
-        int choice = _input.ReadChoice(
-            "Enter country choice: ", 0, AllCountriesChoice);
+        // 1-5 selects a country, 6 selects ALL, and 0/N finishes selection.
+        // This also allows the user to enter 1, then 6 to search ALL countries.
+        List<AseanCountry> selected = new();
+        all = false;
 
-        // 0 = Stop selecting countries
-        if (choice == 0)
+        while (true)
         {
-            break;
-        }
+            string prompt = selected.Count == 0
+                ? "Enter choice: "
+                : "Enter another choice (1-5, 6=ALL, 0/N=finish, Y=continue): ";
 
-        // 6 = Search ALL countries immediately
-        if (choice == AllCountriesChoice)
-        {
-            all = true;
-            return selected;
-        }
+            string input = _input.ReadLine(prompt);
 
-        // Get selected country
-        AseanCountry country =
-            CountryCatalog.SearchOrder[choice - 1];
+            if (input.Equals("N", StringComparison.OrdinalIgnoreCase))
+            {
+                return selected;
+            }
 
-        // Prevent duplicate selections
-        if (selected.Any(c => c.CountryCode == country.CountryCode))
-        {
-            Console.WriteLine(
-                $"{country.Name} is already selected.");
-            continue;
-        }
+            if (input.Equals("Y", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine("Select another country.");
+                continue;
+            }
 
-        selected.Add(country);
+            if (!int.TryParse(input, out int choice) || choice < 0 || choice > AllCountriesChoice)
+            {
+                Console.WriteLine("Invalid choice. Enter 1-6, 0, Y, or N.");
+                continue;
+            }
 
-        Console.WriteLine(
-            $"{country.Name} successfully selected!");
+            if (choice == 0)
+            {
+                return selected;
+            }
 
-        // Ask whether user wants another country
-        bool another = _input.ReadYesNo(
-            "Do you want to select another country [Y/N]? ");
+            if (choice == AllCountriesChoice)
+            {
+                all = true;
+                return selected;
+            }
 
-        if (!another)
-        {
-            break;
+            AseanCountry country = AseanCountry.All[choice - 1];
+            if (selected.Contains(country))
+            {
+                Console.WriteLine($"{country.Name} is already selected.");
+                continue;
+            }
+
+            selected.Add(country);
+            Console.WriteLine($"{country.Name} selected.");
         }
     }
-
-    return selected;
-}
-
 
     private static string JoinNames(IReadOnlyList<AseanCountry> countries)
     {
