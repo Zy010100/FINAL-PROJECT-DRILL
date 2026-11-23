@@ -6,7 +6,7 @@ public class Student
     public string Surname { get; set; }
     public string FirstName { get; set; }
     public string Occupation { get; set; }
-    public char Gender { get; set; }
+    public Gender Gender { get; set; }
     public string CountryCode { get; set; }
     public string AreaCode { get; set; }
     public string PhoneNumber { get; set; }
@@ -16,7 +16,7 @@ public class Student
         string surname,
         string firstName,
         string occupation,
-        char gender,
+        Gender gender,
         string countryCode,
         string areaCode,
         string phoneNumber)
@@ -36,11 +36,6 @@ public class Student
         return CountryCode + "-" + AreaCode + "-" + PhoneNumber;
     }
 
-    public string GetGender()
-    {
-        return Gender == 'M' ? "Male" : "Female";
-    }
-
     public void DisplayInformation()
     {
         Console.WriteLine(
@@ -48,7 +43,7 @@ public class Student
             " is a " + Occupation + ".");
 
         Console.WriteLine("Student Number: " + StudentNumber);
-        Console.WriteLine("Gender: " + GetGender());
+        Console.WriteLine("Gender: " + Gender);
 
         AseanCountry country = CountryCatalog.FindByCode(CountryCode);
 
@@ -67,7 +62,7 @@ public class Student
             Surname + ", " + FirstName +
             ", with student number " + StudentNumber +
             ". Occupation: " + Occupation +
-            ". Gender: " + GetGender() +
+            ". Gender: " + Gender +
             ". Phone number: " + GetFullPhoneNumber() +
             " (" + (country != null ? country.Name : "Unknown") + ").");
     }
